@@ -1,0 +1,39 @@
+version: 2.1  #circle ci version      
+
+jobs:   # There will be two jobs build and test
+  build:
+    working_directory: ~/circleci-python  #folder inside docker image
+    docker:
+      - image: "cimg/python:3.11.5"    #docker image with python 3.11.5
+    steps:        #inside docker image folder then run these steps
+      - checkout            #first step: checkout codebase from github to working directory
+      - run: python3 main.py  #run python program
+  test: 
+    working_directory: ~/circleci-python
+    docker:
+      - image: "cimg/python:3.11.5"
+    steps:
+      - checkout
+      - run: python3 main-test.py
+
+  deploy:
+    docker:
+      - image: cimg/deploy:2023.09          
+    steps:
+      - checkout
+      - run: echo "Hello World"
+      - run: python3 main.py
+
+workflows:  #specify when to run these jobs and on which branches
+  build_and_test_and_deploy:
+    jobs:
+      - build
+      - test:
+          requires:
+            - build  #only test if it is built
+      - deploy:
+          requires:
+            - test #only deploy if the test has completed
+          filters:
+            branches:
+              only: main # only deploy when on main
